@@ -2,65 +2,64 @@ name: Matrix Build with Artifacts
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
   build:
+    name: Build on Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [14, 16, 18, 20]
         include:
           - node-version: 14
-            variant: "lts-fermium"
+            variant: lts-fermium
           - node-version: 16
-            variant: "lts-gallium"
+            variant: lts-gallium
           - node-version: 18
-            variant: "lts-hydrogen"
+            variant: lts-hydrogen
           - node-version: 20
-            variant: "current"
-    
+            variant: current
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: matrix-60a4b7a
+
+      - name: Display matrix info
         run: |
           echo "Building for Node.js version ${{ matrix.node-version }}"
           echo "Variant: ${{ matrix.variant }}"
           echo "Matrix job started at $(date)"
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      
-      - name: Display Node version
+
+      - name: Display Node and npm versions
         run: |
           node --version
           npm --version
-      
-      - name: Generate build artifact
+
+      - name: Generate build artifacts
         run: |
           mkdir -p build
-          cat > build/output.txt << EOF
-          Build Information
-          ==================
-          Node Version: ${{ matrix.node-version }}
-          Variant: ${{ matrix.variant }}
-          Build Time: $(date)
-          Runner OS: ${{ runner.os }}
-          Workflow: ${{ github.workflow }}
-          Run ID: ${{ github.run_id }}
-          Run Number: ${{ github.run_number }}
-          ==================
-          EOF
-          
-          # Create a JSON artifact as well
-          cat > build/build-info.json << EOF
+          {
+            echo "Build Information"
+            echo "=================="
+            echo "Node Version: ${{ matrix.node-version }}"
+            echo "Variant: ${{ matrix.variant }}"
+            echo "Build Time: $(date)"
+            echo "Runner OS: ${{ runner.os }}"
+            echo "Workflow: ${{ github.workflow }}"
+            echo "Run ID: ${{ github.run_id }}"
+            echo "Run Number: ${{ github.run_number }}"
+          } > build/output.txt
+
+          cat > build/build-info.json <<'JSON'
           {
             "nodeVersion": "${{ matrix.node-version }}",
             "variant": "${{ matrix.variant }}",
@@ -70,25 +69,25 @@ jobs:
             "runId": "${{ github.run_id }}",
             "runNumber": "${{ github.run_number }}"
           }
-          EOF
-          
-          echo "Build artifacts generated successfully"
+          JSON
+
+          echo "✅ Build artifacts generated successfully"
           cat build/output.txt
-      
+
       - name: Verify artifact contents
         run: |
           echo "Verifying build artifacts..."
           ls -lah build/
           wc -c build/output.txt
           wc -c build/build-info.json
-      
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-60a4b7a-node${{ matrix.node-version }}
           path: build/
           retention-days: 30
-      
+
       - name: Build summary
         run: |
           echo "✅ Build completed for Node.js ${{ matrix.node-version }}"
