@@ -3,7 +3,7 @@
 This repository demonstrates GitHub Actions matrix builds with artifact management.
 
 ## Contact
-**Email:** dhatchayanim06@gmail.com
+**Email:** 23f2004072@ds.study.iitm.ac.in
 
 ## Workflow Details
 
